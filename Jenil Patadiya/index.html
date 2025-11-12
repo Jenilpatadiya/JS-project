@@ -132,8 +132,6 @@
       font-size: 14px;
       opacity: 0.8;
     }
-
-    /* Waveform animation */
     .wave {
       display: flex;
       justify-content: center;
@@ -161,8 +159,6 @@
       0%, 100% { transform: scaleY(1); }
       50% { transform: scaleY(2.5); }
     }
-
-    /* Light Mode */
     body.light {
       background: linear-gradient(135deg, #f9d423, #ff4e50);
       color: #222;
@@ -263,7 +259,7 @@
     });
 
     recognition.addEventListener("end", () => {
-      if (isListening) recognition.start(); // keeps continuous mode active
+      if (isListening) recognition.start();
     });
 
     copyBtn.addEventListener("click", () => {
@@ -286,3 +282,4 @@
   </script>
 </body>
 </html>
+
