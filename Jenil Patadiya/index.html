@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voice to Text Converter</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      transition: background 1s ease, color 0.5s ease;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #fff;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 2em;
+      letter-spacing: 1px;
+    }
+
+    textarea {
+      width: 80%;
+      max-width: 600px;
+      height: 200px;
+      padding: 15px;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      outline: none;
+      resize: none;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      transition: background 0.5s, color 0.5s;
+    }
+
+    .btns {
+      margin-top: 25px;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button {
+      padding: 12px 25px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #fff;
+      color: #2575fc;
+      transition: all 0.4s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    button:hover {
+      background: #2575fc;
+      color: #fff;
+      transform: scale(1.08);
+      box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+    }
+
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .toggle {
+      position: relative;
+      width: 60px;
+      height: 30px;
+      background: #fff;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .toggle::before {
+      content: "";
+      position: absolute;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #2575fc;
+      top: 2px;
+      left: 2px;
+      transition: all 0.3s;
+    }
+
+    .toggle.active {
+      background: #222;
+    }
+
+    .toggle.active::before {
+      left: 32px;
+      background: #ffeb3b;
+    }
+
+    .theme-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 24px;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+
+    .theme-btn:hover {
+      transform: rotate(25deg);
+    }
+
+    footer {
+      position: absolute;
+      bottom: 15px;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    /* Waveform animation */
+    .wave {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 40px;
+      margin-top: 20px;
+      visibility: hidden;
+    }
+
+    .bar {
+      width: 6px;
+      height: 20px;
+      margin: 0 3px;
+      background: #fff;
+      border-radius: 3px;
+      animation: bounce 1s infinite ease-in-out;
+    }
+
+    .bar:nth-child(2) { animation-delay: 0.1s; }
+    .bar:nth-child(3) { animation-delay: 0.2s; }
+    .bar:nth-child(4) { animation-delay: 0.3s; }
+    .bar:nth-child(5) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 100% { transform: scaleY(1); }
+      50% { transform: scaleY(2.5); }
+    }
+
+    /* Light Mode */
+    body.light {
+      background: linear-gradient(135deg, #f9d423, #ff4e50);
+      color: #222;
+    }
+
+    body.light textarea {
+      background: rgba(0, 0, 0, 0.05);
+      color: #000;
+    }
+
+    body.light button {
+      background: #222;
+      color: #fff;
+    }
+
+    body.light button:hover {
+      background: #ff4e50;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="theme-btn" id="themeToggle">🌙</div>
+
+  <h1>🎤 Voice to Text Converter</h1>
+  <textarea id="textOutput" placeholder="🎙️ Speak something..." readonly></textarea>
+
+  <div class="wave" id="wave">
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+    <div class="bar"></div>
+  </div>
+
+  <div class="btns">
+    <button id="startBtn">🎙️ Start Listening</button>
+    <button id="copyBtn">📋 Copy</button>
+    <button id="clearBtn">🧹 Clear</button>
+  </div>
+
+  <div class="toggle-container">
+    <span>Auto Full Stop</span>
+    <div class="toggle" id="autoToggle"></div>
+  </div>
+
+  <footer>Made with ❤️ using HTML, CSS & JS</footer>
+
+  <script>
+    const textOutput = document.getElementById("textOutput");
+    const startBtn = document.getElementById("startBtn");
+    const copyBtn = document.getElementById("copyBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const autoToggle = document.getElementById("autoToggle");
+    const wave = document.getElementById("wave");
+    const themeToggle = document.getElementById("themeToggle");
+
+    let autoStopEnabled = false;
+    let isListening = false;
+
+    window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-IN";
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    autoToggle.addEventListener("click", () => {
+      autoToggle.classList.toggle("active");
+      autoStopEnabled = !autoStopEnabled;
+    });
+
+    startBtn.addEventListener("click", () => {
+      if (!isListening) {
+        recognition.start();
+        isListening = true;
+        wave.style.visibility = "visible";
+        startBtn.innerText = "🛑 Stop Listening";
+      } else {
+        recognition.stop();
+        isListening = false;
+        wave.style.visibility = "hidden";
+        startBtn.innerText = "🎙️ Start Listening";
+      }
+    });
+
+    recognition.addEventListener("result", (event) => {
+      let transcript = Array.from(event.results)
+        .map(result => result[0].transcript)
+        .join("");
+
+      if (autoStopEnabled && transcript.trim().length > 0) {
+        transcript = transcript.trim();
+        if (!transcript.endsWith(".")) transcript += ".";
+      }
+
+      textOutput.value += transcript + " ";
+      textOutput.scrollTop = textOutput.scrollHeight;
+    });
+
+    recognition.addEventListener("end", () => {
+      if (isListening) recognition.start(); // keeps continuous mode active
+    });
+
+    copyBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(textOutput.value);
+      alert("Copied to clipboard!");
+    });
+
+    clearBtn.addEventListener("click", () => {
+      textOutput.value = "";
+    });
+
+    themeToggle.addEventListener("click", () => {
+      document.body.classList.toggle("light");
+      if (document.body.classList.contains("light")) {
+        themeToggle.textContent = "☀️";
+      } else {
+        themeToggle.textContent = "🌙";
+      }
+    });
+  </script>
+</body>
+</html>
